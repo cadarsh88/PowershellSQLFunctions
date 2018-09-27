@@ -10,6 +10,9 @@ Function Test-AgentJob{
         [System.String]
         $SQLInstanceName = 'MSSQLSERVER',
 
+        [System.Management.Automation.PSCredential]
+        $SetupCredential = [System.Management.Automation.PSCredential]::Empty,
+
         [Parameter()]
         [ValidateSet('WindowsUser', 'SqlLogin')]
         [System.String]
@@ -26,7 +29,12 @@ Function Test-AgentJob{
     )
 
     try{
-        $sqlconnection = Connect-SQL -SQLServer $SQLServer -SQLInstanceName $SQLInstanceName -LoginType $LoginType
+        if($SetupCredential.UserName -eq $null){
+            $sqlconnection = Connect-SQL -SQLServer $SQLServer -SQLInstanceName $SQLInstanceName -LoginType $LoginType
+        } Else{
+            $sqlconnection = Connect-SQL -SQLServer $SQLServer -SQLInstanceName $SQLInstanceName -SetupCredential $SetupCredential -LoginType $LoginType
+        }
+        
         $jobobj = $sqlconnection.JobServer.Jobs | Where-Object {$_.Name -eq $AgentJobName}
         if($Action -eq "Status"){
             $ActionStatus = $jobobj.CurrentRunStatus
